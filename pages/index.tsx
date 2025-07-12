@@ -1,20 +1,15 @@
 import Head from 'next/head'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
 import { Post } from '../types/post'
+import { GetStaticProps } from 'next'
+import fs from 'fs'
+import path from 'path'
 
-export default function Home() {
-  const [posts, setPosts] = useState<Post[]>([])
+interface HomeProps {
+  posts: Post[];
+}
 
-  useEffect(() => {
-    async function fetchPosts() {
-      const res = await fetch('/api/posts')
-      const data = await res.json()
-      setPosts(data)
-    }
-    fetchPosts()
-  }, [])
-
+export default function Home({ posts }: HomeProps) {
   return (
     <div>
       <Head>
@@ -55,4 +50,22 @@ export default function Home() {
       </main>
     </div>
   )
+}
+
+export const getStaticProps: GetStaticProps<HomeProps> = async () => {
+  const postsFilePath = path.join(process.cwd(), 'data', 'posts.json')
+  let posts: Post[] = []
+
+  try {
+    const postsData = fs.readFileSync(postsFilePath, 'utf-8')
+    posts = JSON.parse(postsData)
+  } catch (error) {
+    console.error('Failed to read posts data:', error)
+  }
+
+  return {
+    props: {
+      posts,
+    },
+  }
 }
